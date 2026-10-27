@@ -15,7 +15,11 @@ from openpyxl.utils import get_column_letter
 from functools import wraps
 from werkzeug.security import check_password_hash
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder="modules/harmonizer_v2_8_1/templates",
+    static_folder="modules/harmonizer_v2_8_1/static"
+)
 app.secret_key = os.environ.get('ALRMS_SESSION_SECRET', 'alrms-local-session-v2-8-1-change-me')
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax')
 LOGIN_USERNAME = os.environ.get('ALRMS_USERNAME', 'ALRMS')
