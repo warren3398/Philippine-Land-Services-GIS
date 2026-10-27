@@ -11,7 +11,7 @@ def main(src, out):
     report = {'province':'ABRA','status':'validation_required','layers':{}}
     with zipfile.ZipFile(src) as z:
         for kind in ('NPAAAD','SAFDZ'):
-            hits=[n for n in z.namelist() if re.search(rf'(^|/)ABRA/ABRA_{kind}/ABRA_{kind}\\.shp$',n,re.I)]
+            hits=[n for n in z.namelist() if re.search(rf'(^|/)ABRA/ABRA_{kind}/ABRA_{kind}\.shp$',n,re.I)]
             if len(hits)!=1: raise ValueError(f'{kind}: expected 1 SHP, found {len(hits)}')
             folder=hits[0].rsplit('/',1)[0]+'/'
             with tempfile.TemporaryDirectory() as temp:
