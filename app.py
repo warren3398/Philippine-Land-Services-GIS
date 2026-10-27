@@ -490,7 +490,46 @@ def eo79_module():
         # Older EO79 source: allow the interface to open instead of returning 502.
         # A matching v36 source is required before nationwide loading can be certified.
         app.logger.warning('EO79 source lacks v36 nationwide loader; serving source without nationwide data patch')
+    # Replace the original full-province browser gzip loader with a parcel-bounded
+    # server-side streaming reader. This avoids browser memory spikes and dozens
+    # of sequential compressed downloads.
+    start = html.find('async function loadProvinceData(prov){')
+    end = html.find('async function populateNationwideOptions(){', start)
+    if start >= 0 and end > start:
+        replacement = '''async function loadProvinceData(prov){
+ const pb=turf.bbox(parcelFC);
+ const slug=prov.path.split('/')[0];
+ status('safdzStatus', 'Filtering '+prov.province+' SAFDZ on server…');
+ const response=await fetch('/eo79/filter-safdz',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({province:slug,bbox:pb})
+ });
+ let result;
+ try{result=await response.json()}catch(e){throw new Error('Invalid server response for '+prov.province)}
+ if(!response.ok)throw new Error(result.error||('SAFDZ server HTTP '+response.status));
+ return result;
+}
+'''
+        html = html[:start] + replacement + html[end:]
+    else:
+        app.logger.error('EO79 v36 loadProvinceData function not found; server filter not injected')
     return Response(html, content_type='text/html; charset=utf-8', headers={'Cache-Control':'private, max-age=300', 'X-Content-Type-Options':'nosniff'})
+
+
+@app.route('/eo79/filter-safdz', methods=['POST'])
+@login_required
+def eo79_filter_safdz():
+    from eo79_spatial import filtered_province
+    from flask import request, jsonify
+    payload = request.get_json(silent=True) or {}
+    try:
+        result = filtered_province(payload.get('province'), payload.get('bbox'))
+        return jsonify(result)
+    except ValueError as exc:
+        return jsonify({'error':str(exc)}), 422
+    except Exception as exc:
+        app.logger.exception('EO79 server-side SAFDZ filter failed for %s', payload.get('province'))
+        return jsonify({'error':'Server could not process SAFDZ: '+type(exc).__name__}), 502
 
 
 @app.route('/eo79/data/<path:object_key>')
