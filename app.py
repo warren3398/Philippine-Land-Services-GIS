@@ -453,6 +453,36 @@ def index():
     return render_template('index.html')
 
 
+# Cloudflare R2 SAFDZ public data access for the EO79 integration.
+# Only the configured bucket's public endpoint is used; no credentials are exposed.
+EO79_R2_BASE = 'https://pub-97016449b28c4233ac1dfb3dee40477a.r2.dev'
+
+@app.route('/eo79/data/<path:object_key>')
+@login_required
+def eo79_data(object_key):
+    from urllib.parse import quote
+    from urllib.request import urlopen, Request
+    from flask import Response, abort
+    if any(part in ('', '.', '..') for part in object_key.split('/')):
+        abort(400)
+    if not object_key.lower().endswith(('.json', '.geojson', '.geojson.gz')):
+        abort(404)
+    try:
+        req = Request(EO79_R2_BASE + '/' + quote(object_key, safe='/'), headers={'User-Agent':'PLS-GIS/1.0'})
+        with urlopen(req, timeout=25) as upstream:
+            payload = upstream.read(32 * 1024 * 1024 + 1)
+            if len(payload) > 32 * 1024 * 1024:
+                abort(413)
+            mime = 'application/gzip' if object_key.endswith('.gz') else 'application/json'
+            return Response(payload, mimetype=mime, headers={'Cache-Control':'public, max-age=300'})
+    except Exception as exc:
+        from urllib.error import HTTPError
+        if isinstance(exc, HTTPError) and exc.code == 404:
+            abort(404)
+        app.logger.warning('EO79 R2 request failed: %s', type(exc).__name__)
+        abort(502)
+
+
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok', 'app': 'NPAAAD/SAFDZ CLUP Harmonizer', 'version': '2.8.1'})
