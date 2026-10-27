@@ -19,4 +19,4 @@ COPY . .
 
 ENV PORT=10000
 
-CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn app:app --interface wsgi --host 0.0.0.0 --port ${PORT}"]
