@@ -498,25 +498,36 @@ def eo79_module():
 def eo79_data(object_key):
     from urllib.parse import quote
     from urllib.request import urlopen, Request
+    from urllib.error import HTTPError, URLError
     from flask import Response, abort
+    import time
     if any(part in ('', '.', '..') for part in object_key.split('/')):
         abort(400)
     if not object_key.lower().endswith(('.json', '.geojson', '.geojson.gz')):
         abort(404)
-    try:
-        req = Request(EO79_R2_BASE + '/' + quote(object_key, safe='/'), headers={'User-Agent':'PLS-GIS/1.0'})
-        with urlopen(req, timeout=25) as upstream:
-            payload = upstream.read(32 * 1024 * 1024 + 1)
-            if len(payload) > 32 * 1024 * 1024:
-                abort(413)
-            mime = 'application/gzip' if object_key.endswith('.gz') else 'application/json'
-            return Response(payload, mimetype=mime, headers={'Cache-Control':'private, max-age=300'})
-    except Exception as exc:
-        from urllib.error import HTTPError
-        if isinstance(exc, HTTPError) and exc.code == 404:
-            abort(404)
-        app.logger.warning('EO79 R2 request failed: %s', type(exc).__name__)
-        abort(502)
+    url = EO79_R2_BASE + '/' + quote(object_key, safe='/')
+    last_error = None
+    for attempt in range(3):
+        try:
+            req = Request(url, headers={'User-Agent':'PLS-GIS/1.0', 'Accept-Encoding':'identity'})
+            with urlopen(req, timeout=45) as upstream:
+                payload = upstream.read(64 * 1024 * 1024 + 1)
+                if len(payload) > 64 * 1024 * 1024:
+                    abort(413)
+                mime = 'application/gzip' if object_key.endswith('.gz') else 'application/json'
+                return Response(payload, mimetype=mime, headers={'Cache-Control':'private, max-age=1800', 'X-EO79-Part':object_key})
+        except HTTPError as exc:
+            if exc.code == 404:
+                app.logger.error('EO79 missing R2 object: %s', object_key)
+                abort(404, description='SAFDZ file missing: ' + object_key)
+            last_error = exc
+        except (URLError, TimeoutError, OSError) as exc:
+            last_error = exc
+        app.logger.warning('EO79 R2 retry %d/3 for %s: %s', attempt + 1, object_key, str(last_error)[:160])
+        if attempt < 2:
+            time.sleep(0.5 * (attempt + 1))
+    app.logger.error('EO79 R2 failed for %s after 3 attempts: %s', object_key, str(last_error)[:200])
+    abort(502, description='SAFDZ download failed: ' + object_key)
 
 
 @app.route('/health')
