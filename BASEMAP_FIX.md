@@ -1,0 +1,1 @@
+v2.0 Basemap fix: replaced OpenStreetMap volunteer tile URL with Esri World Topographic Map. Added non-blocking tile-error warning. This fixes the tile URL configuration, not network restrictions or other GIS backend issues. Internet access and provider terms still apply.

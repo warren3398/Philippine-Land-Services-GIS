@@ -1,0 +1,12 @@
+PHILIPPINE LAND SERVICES GIS PORTAL - ONE WEBSITE
+
+1. Extract the entire ZIP into a folder.
+2. Double-click RUN_WEBSITE.bat (first run installs dependencies).
+3. Your browser should open http://127.0.0.1:8000/ automatically.
+4. Click Open EO79 or Open Harmonizer on the dashboard.
+5. Keep the terminal window open while using the website.
+
+For later runs, double-click START_WEBSITE.bat.
+This is a LOCAL website, not a publicly deployed website.
+Nationwide EO79 province data and slope database are NOT included.
+The Climate module is a placeholder.
