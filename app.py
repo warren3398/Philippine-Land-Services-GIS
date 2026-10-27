@@ -483,10 +483,13 @@ def eo79_module():
         app.logger.warning('EO79 source unavailable: %s', type(exc).__name__)
         abort(502, description='EO79 interface temporarily unavailable')
     original = "const NATIONWIDE_DATA_ROOT='data/';"
-    if original not in html:
-        abort(502, description='EO79 v36 data loader not found')
-    html = html.replace(original, "const NATIONWIDE_DATA_ROOT='" + EO79_R2_BASE + "/';", 1)
-    html = html.replace("if(value.startsWith('data/'))return value;", "if(value.startsWith('data/'))return NATIONWIDE_DATA_ROOT+value.slice(5);", 1)
+    if original in html:
+        html = html.replace(original, "const NATIONWIDE_DATA_ROOT='" + EO79_R2_BASE + "/';", 1)
+        html = html.replace("if(value.startsWith('data/'))return value;", "if(value.startsWith('data/'))return NATIONWIDE_DATA_ROOT+value.slice(5);", 1)
+    else:
+        # Older EO79 source: allow the interface to open instead of returning 502.
+        # A matching v36 source is required before nationwide loading can be certified.
+        app.logger.warning('EO79 source lacks v36 nationwide loader; serving source without nationwide data patch')
     return Response(html, content_type='text/html; charset=utf-8', headers={'Cache-Control':'private, max-age=300', 'X-Content-Type-Options':'nosniff'})
 
 
