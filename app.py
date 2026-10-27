@@ -457,6 +457,39 @@ def index():
 # Only the configured bucket's public endpoint is used; no credentials are exposed.
 EO79_R2_BASE = 'https://pub-97016449b28c4233ac1dfb3dee40477a.r2.dev'
 
+@app.route('/eo79')
+@login_required
+def eo79_module():
+    # The exact v36 index.html uploaded by the user is already in their EO79
+    # repository (verified against its Git blob SHA). Fetch it once and inject
+    # the R2 data root, preserving the original browser GIS application.
+    from functools import lru_cache
+    from urllib.request import urlopen, Request
+    from flask import Response, abort
+
+    @lru_cache(maxsize=1)
+    def source_html():
+        url = 'https://raw.githubusercontent.com/warren3398/EO-79-SAFDZ-Map-Generator/main/index.html'
+        req = Request(url, headers={'User-Agent': 'PLS-GIS-Portal/1.0'})
+        with urlopen(req, timeout=35) as response:
+            html = response.read(6 * 1024 * 1024 + 1)
+        if len(html) > 6 * 1024 * 1024:
+            raise ValueError('EO79 source exceeds maximum size')
+        return html.decode('utf-8')
+
+    try:
+        html = source_html()
+    except Exception as exc:
+        app.logger.warning('EO79 source unavailable: %s', type(exc).__name__)
+        abort(502, description='EO79 interface temporarily unavailable')
+    original = "const NATIONWIDE_DATA_ROOT='data/';"
+    if original not in html:
+        abort(502, description='EO79 v36 data loader not found')
+    html = html.replace(original, "const NATIONWIDE_DATA_ROOT='" + EO79_R2_BASE + "/';", 1)
+    html = html.replace("if(value.startsWith('data/'))return value;", "if(value.startsWith('data/'))return NATIONWIDE_DATA_ROOT+value.slice(5);", 1)
+    return Response(html, content_type='text/html; charset=utf-8', headers={'Cache-Control':'private, max-age=300', 'X-Content-Type-Options':'nosniff'})
+
+
 @app.route('/eo79/data/<path:object_key>')
 @login_required
 def eo79_data(object_key):
