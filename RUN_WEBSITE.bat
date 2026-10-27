@@ -1,12 +1,8 @@
 @echo off
+setlocal
 cd /d "%~dp0"
-echo Installing GIS Portal dependencies (internet required for first setup)...
-python -m pip install -r requirements.txt
-if errorlevel 1 (
- echo Dependency installation failed. Check Python and internet connection.
- pause
- exit /b 1
+if not exist ".venv\Scripts\python.exe" (
+  call INSTALL_AND_RUN.bat
+  exit /b
 )
-echo Opening Philippine Land Services GIS Portal...
-python launch.py
-pause
+.venv\Scripts\python.exe launcher.py

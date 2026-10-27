@@ -1,21 +1,29 @@
-# Philippine Land Services GIS Portal v2.0 (unified)
+# NPAAAD/SAFDZ–CLUP Harmonizer v2.8.1
 
-One Python ASGI application. No separate frontend/backend folders or URL configuration.
+Local Windows GIS application for harmonization and integration of NPAAAD/SAFDZ into CLUP.
 
-## Start
-1. Install Python 3.11+.
-2. Run `pip install -r requirements.txt`.
-3. If using code-only ZIP, copy your `Slope_utm.shp/.shx/.dbf/.prj/.CPG` into `data/slope/`.
-4. Run `python -m uvicorn app:app --host 127.0.0.1 --port 8000` (or `RUN_WEBSITE.bat` on Windows).
-5. Visit `http://127.0.0.1:8000/`.
+## Main features
+- NPAAAD/SAFDZ master CRS workflow
+- ELU description mapping to AGR, BU, or Other/Ignore
+- Land Cover 2025 integration
+- Harmonization Decision field
+- Poultry shapefile clipping and area identification
+- NPAAAD and SAFDZ area matrices with official category descriptions
+- Shapefile and Excel outputs
+- Geometry validation/cleaning without geometry simplification
+- Windows desktop shortcut and local login protection
 
-Routes: `/` dashboard, `/eo79/` EO79 v36, `/harmonizer/` Harmonizer v2.8.1, `/api/slope/clip` slope processing. The original EO79 and Harmonizer logic is retained, with the Harmonizer mounted as a Flask WSGI application within FastAPI. Climate module is a placeholder; Erosion/Flooding has been removed.
+## Windows installation
+1. Download the release ZIP and extract it to a normal folder.
+2. Run `INSTALL_AND_RUN.bat`.
+3. Allow the first installation to download required Python packages.
+4. Use the desktop shortcut created by the installer for later runs.
 
-## Known limitations
-- This is a **single Python server**, not a static GitHub Pages deployment. GitHub Pages alone cannot run the application.
-- Slope parcel clipping requires the nationwide slope files in `data/slope/`.
-- Municipality selection needs a separate official admin boundary GeoJSON at `data/admin_boundaries.geojson` containing region/province/municipality columns.
-- PDF output is an area report, not a cartographic map layout.
-- EO79 v36 uses its original client-side data handling; integration is navigation/server consolidation, not a rewrite of EO79 processing.
-- Harmonizer authentication remains its original login; configure `ALRMS_SESSION_SECRET`, `ALRMS_USERNAME`, and `ALRMS_PASSWORD_HASH` before public deployment. Do not use bundled default credentials or expose the server without authentication, rate limits and upload quotas.
-- No live end-to-end deployment verification has been performed.
+## Default local login
+- Username: `ALRMS`
+- Password: `ALRMS001`
+
+For shared/public deployments, configure credentials and the Flask session secret using environment variables instead of relying on defaults.
+
+## Version
+v2.8.1 is the GitHub-ready packaging of the current approved Harmonizer build. Runtime GIS behavior is retained from the approved v2.7 line while repository hygiene/version metadata are updated for ongoing releases.
