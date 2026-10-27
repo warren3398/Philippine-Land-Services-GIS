@@ -484,7 +484,7 @@ def eo79_module():
         abort(502, description='EO79 interface temporarily unavailable')
     original = "const NATIONWIDE_DATA_ROOT='data/';"
     if original in html:
-        html = html.replace(original, "const NATIONWIDE_DATA_ROOT='" + EO79_R2_BASE + "/';", 1)
+        html = html.replace(original, "const NATIONWIDE_DATA_ROOT='/eo79/data/';", 1)
         html = html.replace("if(value.startsWith('data/'))return value;", "if(value.startsWith('data/'))return NATIONWIDE_DATA_ROOT+value.slice(5);", 1)
     else:
         # Older EO79 source: allow the interface to open instead of returning 502.
@@ -510,7 +510,7 @@ def eo79_data(object_key):
             if len(payload) > 32 * 1024 * 1024:
                 abort(413)
             mime = 'application/gzip' if object_key.endswith('.gz') else 'application/json'
-            return Response(payload, mimetype=mime, headers={'Cache-Control':'public, max-age=300'})
+            return Response(payload, mimetype=mime, headers={'Cache-Control':'private, max-age=300'})
     except Exception as exc:
         from urllib.error import HTTPError
         if isinstance(exc, HTTPError) and exc.code == 404:
