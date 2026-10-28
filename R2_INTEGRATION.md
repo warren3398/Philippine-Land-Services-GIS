@@ -29,3 +29,7 @@ The inventory scans `nationwide/{luzon|visayas|mindanao}/{province}/{npaaad|safd
 - Test the endpoint on a deployed Flask server with secrets configured
 
 Do not deploy with the repository's local default credentials; configure `ALRMS_USERNAME`, `ALRMS_PASSWORD_HASH`, and `ALRMS_SESSION_SECRET` securely before any public deployment.
+
+## Browser UI
+
+After merging and deploying, sign in to the Flask portal and open `/api/nationwide/browser`, or click the **Nationwide NPAAAD / SAFDZ Database** card on the dashboard. The page reads `/api/nationwide/catalog` using the same authenticated session. No public R2 access is required.
