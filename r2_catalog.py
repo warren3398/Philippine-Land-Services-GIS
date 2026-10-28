@@ -1,7 +1,7 @@
 """Read-only, authenticated inventory of nationwide GeoPackages in private Cloudflare R2."""
 import os
 from collections import defaultdict
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request, session, render_template
 
 r2_catalog = Blueprint("r2_catalog", __name__, url_prefix="/api/nationwide")
 BUCKET = "npaaad-safdz-data"
@@ -38,6 +38,11 @@ def _objects(client, prefix):
 def require_login():
     if not session.get("logged_in"):
         return jsonify(error="Login required"), 401
+
+
+@r2_catalog.get("/browser")
+def browser():
+    return render_template("nationwide_browser.html")
 
 
 @r2_catalog.get("/catalog")
