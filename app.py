@@ -44,6 +44,9 @@ def no_cache(response):
     response.headers['Expires'] = '0'
     return response
 
+from r2_catalog import r2_catalog
+app.register_blueprint(r2_catalog)
+
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024
 
 WORK_ROOT = Path(tempfile.gettempdir()) / 'npaaad_clup_harmonizer'
